@@ -1,0 +1,1 @@
+Given two integers $a$ and $b$ on separate lines, output $2a$ and $2b$ also on separate lines.

@@ -1,0 +1,22 @@
+* {
+    font-family: Segoe UI;
+}
+
+html, body {
+    height: 100%;
+}
+
+.vertical-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+}
+
+.horizontal-layout {
+    flex: 1;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
