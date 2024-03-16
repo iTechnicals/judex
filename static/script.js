@@ -5,6 +5,8 @@ var editor = ace.edit("editor", {
     mode: 'ace/mode/python'
 });
 
+dummyeditor.value = editor.getValue();
+
 editor.getSession().on("change", function () {
     dummyeditor.value = editor.getValue();
 });
