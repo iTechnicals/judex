@@ -43,22 +43,33 @@ def problems(problem_id):
 
                 for i, j in enumerate(PROBLEM_INPUTS[problem_number]):
                     process = subprocess.Popen(["python", "-c", user_input], stdin=subprocess.PIPE,
-                                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
                     for k in j:
                         process.stdin.write(k + "\n")
 
                     process.stdin.close()
 
-                    output, _ = process.communicate(timeout=1)
-                    output = output.strip().split("\n")
+                    output, error = process.communicate(timeout=1)
 
-                    if output == PROBLEM_OUTPUTS[problem_number][i]:
+                    if error:
+                        output = error
+                        break
+
+                    output = output.strip().split("\n")
+                    expt_output = PROBLEM_OUTPUTS[problem_number][i].copy()
+
+                    if output == expt_output:
                         continue
 
                     else:
                         new_output = f"Wrong answer on testcase {i + 1}: \nYour output:        Correct output:\n"
-                        for actual, expt in zip(output, PROBLEM_OUTPUTS[problem_number][i]):
+                        if len(output) < len(expt_output):
+                            output += [""] * (len(expt_output) - len(output))
+                        else:
+                            expt_output += [""] * (len(output) - len(expt_output))
+
+                        for actual, expt in zip(output, expt_output):
                             new_output += actual + "".join((20 - len(actual)) * [" "]) + expt + "\n"
                         output = new_output
                         break
