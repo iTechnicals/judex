@@ -37,7 +37,7 @@
                 </div>
             </div>
             <button {% if not complete %} disabled {% endif %} class="next-button"
-                    onclick="window.location='{% if next_problem_id %} {{ url_for('problem', problem_id=next_problem_id) }} {% else %} {{ url_for('done') }} {% endif %}';">
+                    onclick="window.location='{% if next_problem_id %} {{ url_for('problems', problem_id=next_problem_id) }} {% else %} {{ url_for('done') }} {% endif %}';">
                 <svg width="70px" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
 <!--                    <rect class="button-rect" width="800" height="600" rx="80" ry="80" fill="#8F8ECC"/>-->
                     <polygon class="button-arrow" points="100, 200 100, 400 500, 400 500, 500 700, 300 500, 100 500, 200" fill=

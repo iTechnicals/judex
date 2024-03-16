@@ -32,8 +32,8 @@ for i in range(len(PROBLEM_TEXTS)):
 PROBLEM_REV_IDS = {j: i for i, j in PROBLEM_IDS.items()}
 print(PROBLEM_REV_IDS)
 
-@app.route("/problem/<problem_id>", methods=['GET', 'POST'])
-def problem(problem_id):
+@app.route("/problems/<problem_id>", methods=['GET', 'POST'])
+def problems(problem_id):
     complete = False
     problem_number = PROBLEM_IDS[problem_id]
     match request.method:
