@@ -16,6 +16,7 @@
             });
         </script>
         <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
     </head>
     <body>
         <div class="vertical-layout">
@@ -37,7 +38,7 @@
                 </div>
             </div>
             <button {% if not complete %} disabled {% endif %} class="next-button"
-                    onclick="window.location='{% if next_problem_id %} {{ url_for('problems', problem_id=next_problem_id) }} {% else %} {{ url_for('done') }} {% endif %}';">
+                    onclick="window.location='{{ url_for('problems') }}';">
                 <svg width="70px" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
 <!--                    <rect class="button-rect" width="800" height="600" rx="80" ry="80" fill="#8F8ECC"/>-->
                     <polygon class="button-arrow" points="100, 200 100, 400 500, 400 500, 500 700, 300 500, 100 500, 200" fill=
@@ -46,6 +47,25 @@
             </button>
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
-        <script src="{{ url_for('static', filename='scripts/problem.js') }}"></script
-    </body>>
+        <script src="{{ url_for('static', filename='scripts/problem.js') }}"></script>
+        <script>
+            function checkValidity() {
+                $.getJSON({
+                    url: "/get_valid_username",
+                    success: function(data, textStatus, xhr){
+                        console.log(data);
+                        switch (data) {
+                            case 1:
+                                window.location.replace("{{ url_for('login', extra_content="Oops, looks like you got kicked! You can always join back in.") }}");
+                            case 2:
+                                window.location.replace("{{ url_for('leaderboard', extra_content="That&#39;s a wrap! Here are the final scores.") }}");
+                        }
+                    }
+                });
+            }
+
+            checkValidity();
+            setInterval(checkValidity, 10000);
+        </script>
+    </body>
 </html>

@@ -1,5 +1,3 @@
-let latestData = {};
-
 function updateLeaderboard() {
     $.getJSON({
         url: "/get_scores",

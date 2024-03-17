@@ -1,17 +1,26 @@
 import subprocess
 import json
+import time
+import socket
 
 from secrets import token_urlsafe
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from markupsafe import escape
 
 app = Flask(__name__, static_url_path="/static")
+local = socket.gethostbyname(socket.gethostname())
+print(local)
+
+app.secret_key = token_urlsafe(16)
 
 PROBLEM_TEXTS = []
 PROBLEM_INPUTS = []
 PROBLEM_OUTPUTS = []
+PROBLEM_SCORES = []
 
-PROBLEM_IDS = {}
+DURATION = 60
+START_TIME = float('inf')
 
 for problem in (Path(__file__).parent / "problems").glob('*'):
     if not problem.is_dir():
@@ -21,31 +30,35 @@ for problem in (Path(__file__).parent / "problems").glob('*'):
         PROBLEM_TEXTS.append(f.read())
 
     with open(problem / "tests.json", "r") as f:
-        data = list(map(list, zip(*json.load(f))))
+        data = json.load(f)
+        PROBLEM_SCORES.append(data.pop(0))
+
+        data = list(map(list, zip(*data)))
         PROBLEM_INPUTS.append(data[0])
         PROBLEM_OUTPUTS.append(data[1])
 
-for i in range(len(PROBLEM_TEXTS)):
-    PROBLEM_IDS[str(i)] = i
-    # PROBLEM_IDS[token_urlsafe(16)] = i
+scores = {}
 
-PROBLEM_REV_IDS = {j: i for i, j in PROBLEM_IDS.items()}
-print(PROBLEM_REV_IDS)
-
-scores = {'A': (1, 1), 'B': (2, 2), 'C': (3, 3)}
-
-# @app.route("/")
-# def home():
-#     if request.remote_addr == "127.0.0.1":
-#         return redirect(url_for('admin'))
-#     else:
-#         return redirect(url_for('problems', problem_id=0))
+@app.route("/")
+def home():
+    print(request.remote_addr)
+    if request.remote_addr == "127.0.0.1" or request.remote_addr == local:
+        return redirect(url_for('admin'))
+    else:
+        return redirect(url_for('problems', problem_id=0))
 
 
-@app.route("/problems/<problem_id>", methods=['GET', 'POST'])
-def problems(problem_id):
+@app.route("/problems", methods=['GET', 'POST'])
+def problems():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
     complete = False
-    problem_number = PROBLEM_IDS[problem_id]
+    problem_number = session['first_unsolved_problem']
+    
+    if problem_number > len(PROBLEM_INPUTS) - 1:
+        return redirect(url_for('leaderboard', extra_content='Welp, looks like you finished all the problems! Time for the event admin to get back to work :)'))
+    
     match request.method:
         case 'POST':
             try:
@@ -88,26 +101,24 @@ def problems(problem_id):
                     output = "Congratulations, your program passed all the testcases!"
                     complete = True
 
+                    session['first_unsolved_problem'] += 1
+
+                    scores[session["username"]][0] += 1
+                    scores[session["username"]][1] += round(PROBLEM_SCORES[problem_number] * (1 - (time.time() - START_TIME) / DURATION))
+
             except subprocess.CalledProcessError as e:
                 output = f"Error: {e.output}"
 
         case 'GET':
-            output = None
+            output = "Output shows up here!"
             complete = False
             user_input = "# Code goes here!"
-
-    print(PROBLEM_REV_IDS.get(problem_number + 1, False))
 
     return render_template('problem.html',
                            statement=PROBLEM_TEXTS[problem_number],
                            content=user_input,
                            output=output,
-                           complete=complete,
-                           next_problem_id=PROBLEM_REV_IDS.get(problem_number + 1, False))
-
-@app.route("/done")
-def done():
-    return render_template('done.html')
+                           complete=complete)
 
 
 @app.route("/get_scores")
@@ -118,12 +129,62 @@ def get_scores():
 
 @app.route("/leaderboard")
 def leaderboard():
-    return render_template('leaderboard.html')
+    print(request.args.get('extra_content'))
+    return render_template('leaderboard.html', extra_content=request.args.get('extra_content') or "")
 
 
-# @app.route("/admin")
-# def admin():
-#     if request.remote_addr == "127.0.0.1":
-#         ...
-#     else:
-#         return "", 403
+@app.route("/admin", methods=['POST', 'GET'])
+def admin():
+    if request.remote_addr == "127.0.0.1" or request.remote_addr == local:
+        match request.method:
+            case "POST":
+                global START_TIME
+                START_TIME = time.time()
+                return redirect(url_for('leaderboard'))
+
+            case "GET":
+                return render_template('admin.html')
+
+    else:
+        return "", 403
+
+
+@app.route("/login", methods=['POST', 'GET'])
+def login():
+    match request.method:
+        case "POST":
+            username = request.form['user_input']
+            if username not in scores:
+                session['username'] = username
+                session['first_unsolved_problem'] = 0
+                scores[username] = [0, 0]
+                return redirect(url_for('waiting_room'))
+            else:
+                return render_template('login.html',
+                                       extra_content="That username is already taken, try again!")
+        case "GET":
+            return render_template('login.html')
+
+
+@app.route("/waiting_room")
+def waiting_room():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    return render_template('waiting_room.html', username=session['username'])
+
+
+@app.route("/get_begun")
+def get_begun():
+    return str(int(START_TIME < float('inf')))
+
+
+@app.route("/get_valid_username")
+def get_valid_username():
+    print(time.time(), START_TIME + DURATION)
+    if session.get('username') in scores and time.time() < START_TIME + DURATION:
+        return "0"
+    elif session.get('username') not in scores:
+        return "1"
+    else:
+        return "2"

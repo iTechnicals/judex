@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Title</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles/done.css') }}">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    </head>
+    <body>
+        <div class="vertical-layout">
+            <div>You've successfully joined the room under the username {{ username }}. Wait for the host to start the competition.</div>
+        </div>
+    <script>
+        function checkRedirect() {
+            $.getJSON({
+                url: "/get_begun",
+                success: function(data, textStatus, xhr){
+                    console.log(data);
+                    if (data == 1) {
+                        window.location.replace("{{ url_for('problems') }}");
+                    }
+                }
+            });
+        }
+
+        function checkValidity() {
+            $.getJSON({
+                url: "/get_valid_username",
+                success: function(data, textStatus, xhr){
+                    console.log(data);
+                    console.log(typeof(data));
+                    switch (data) {
+                        case 1:
+                            window.location.replace("{{ url_for('login', extra_content="Oops, looks like you got kicked! You can always join back in.") }}");
+                        case 2:
+                            window.location.replace("{{ url_for('leaderboard', extra_content="Hmmm... the race is over and you never even started! How did that happen?") }}");
+                    }
+                }
+            });
+        }
+
+        checkRedirect();
+        checkValidity();
+        setInterval(checkRedirect, 5000);
+        setInterval(checkValidity, 10000);
+    </script>
+    </body>
+</html>

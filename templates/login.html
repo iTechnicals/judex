@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Title</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles/done.css') }}">
+    </head>
+    <body>
+        <div class="vertical-layout">
+            <p>Enter a username and submit to get started.</p>
+            <form method="POST">
+                <input name="user_input"></input>
+                <button id="submit" type="submit">Go!</button>
+            </form>
+            <p>{{ extra_content }}</p>
+        </div>
+    </body>
+</html>
