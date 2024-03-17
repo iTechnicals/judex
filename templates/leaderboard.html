@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Title</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles/leaderboard.css') }}">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    </head>
+    <body>
+        <div class="vertical-layout">
+            <div class="leaderboard">
+                <div class="grid-item">
+                    <strong>Player</strong>
+                </div>
+                <div class="grid-item right-grid-item">
+                    <strong>Problems solved</strong>
+                </div>
+                <div class="grid-item right-grid-item">
+                    <strong>Score</strong>
+                </div>
+            </div>
+            <div class="leaderboard" id="leaderboard">
+            </div>
+        </div>
+        <script src="{{ url_for('static', filename='scripts/leaderboard.js') }}"></script>
+    </body>
+</html>

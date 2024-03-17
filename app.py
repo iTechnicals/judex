@@ -3,7 +3,7 @@ import json
 
 from secrets import token_urlsafe
 from pathlib import Path
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 
 app = Flask(__name__, static_url_path="/static")
 
@@ -31,6 +31,16 @@ for i in range(len(PROBLEM_TEXTS)):
 
 PROBLEM_REV_IDS = {j: i for i, j in PROBLEM_IDS.items()}
 print(PROBLEM_REV_IDS)
+
+scores = {'A': (1, 1), 'B': (2, 2), 'C': (3, 3)}
+
+# @app.route("/")
+# def home():
+#     if request.remote_addr == "127.0.0.1":
+#         return redirect(url_for('admin'))
+#     else:
+#         return redirect(url_for('problems', problem_id=0))
+
 
 @app.route("/problems/<problem_id>", methods=['GET', 'POST'])
 def problems(problem_id):
@@ -98,3 +108,22 @@ def problems(problem_id):
 @app.route("/done")
 def done():
     return render_template('done.html')
+
+
+@app.route("/get_scores")
+def get_scores():
+    print(request.remote_addr)
+    return jsonify(scores)
+
+
+@app.route("/leaderboard")
+def leaderboard():
+    return render_template('leaderboard.html')
+
+
+# @app.route("/admin")
+# def admin():
+#     if request.remote_addr == "127.0.0.1":
+#         ...
+#     else:
+#         return "", 403
