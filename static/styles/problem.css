@@ -1,5 +1,10 @@
 .text {
     font-family: Segoe UI;
+    white-space: pre-line;
+}
+
+.no-margin {
+    margin: 0;
 }
 
 body {

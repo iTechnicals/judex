@@ -14,12 +14,13 @@ print(local)
 
 app.secret_key = token_urlsafe(16)
 
+PROBLEM_TITLES = []
 PROBLEM_TEXTS = []
 PROBLEM_INPUTS = []
 PROBLEM_OUTPUTS = []
 PROBLEM_SCORES = []
 
-DURATION = 60
+DURATION = 120
 START_TIME = float('inf')
 
 for problem in (Path(__file__).parent / "problems").glob('*'):
@@ -27,7 +28,28 @@ for problem in (Path(__file__).parent / "problems").glob('*'):
         continue
 
     with open(problem / "problem.txt", "r") as f:
-        PROBLEM_TEXTS.append(f.read())
+        txt = f.readlines()
+        PROBLEM_TITLES.append(txt.pop(0)[:-1])
+        PROBLEM_TEXTS.append("")
+
+        inner = False
+        i = 0
+        while i < len(txt := "".join(txt)):
+            try:
+                if txt[i:i+4] == "```\n" and not inner:
+                    PROBLEM_TEXTS[-1] += '<pre class="code"><code>'
+                    inner = True
+                    i += 4
+                elif txt[i:i+4] == "\n```" and inner:
+                    PROBLEM_TEXTS[-1] += '</code></pre>'
+                    inner = False
+                    i += 4
+                else:
+                    raise IndexError()
+            except IndexError:
+                PROBLEM_TEXTS[-1] += txt[i]
+                i += 1
+
 
     with open(problem / "tests.json", "r") as f:
         data = json.load(f)
@@ -115,6 +137,7 @@ def problems():
             user_input = "# Code goes here!"
 
     return render_template('problem.html',
+                           title=PROBLEM_TITLES[problem_number],
                            statement=PROBLEM_TEXTS[problem_number],
                            content=user_input,
                            output=output,
@@ -123,14 +146,20 @@ def problems():
 
 @app.route("/get_scores")
 def get_scores():
-    print(request.remote_addr)
     return jsonify(scores)
 
 
-@app.route("/leaderboard")
+@app.route("/leaderboard", methods=['GET', 'POST'])
 def leaderboard():
-    print(request.args.get('extra_content'))
-    return render_template('leaderboard.html', extra_content=request.args.get('extra_content') or "")
+    admin = request.remote_addr == "127.0.0.1" or request.remote_addr == local
+    match request.method:
+        case "POST":
+            if admin:
+                del scores[list(request.form.keys())[0]]
+
+    return render_template('leaderboard.html',
+                           extra_content=request.args.get('extra_content') or "",
+                           admin=admin)
 
 
 @app.route("/admin", methods=['POST', 'GET'])
@@ -149,6 +178,14 @@ def admin():
         return "", 403
 
 
+@app.route("/auth")
+def auth():
+    if request.remote_addr == "127.0.0.1" or request.remote_addr == local:
+        return "1"
+    else:
+        return "0"
+
+
 @app.route("/login", methods=['POST', 'GET'])
 def login():
     match request.method:
@@ -163,7 +200,8 @@ def login():
                 return render_template('login.html',
                                        extra_content="That username is already taken, try again!")
         case "GET":
-            return render_template('login.html')
+            return render_template('login.html',
+                                   extra_content=request.args.get('extra_content') or "")
 
 
 @app.route("/waiting_room")
@@ -181,7 +219,6 @@ def get_begun():
 
 @app.route("/get_valid_username")
 def get_valid_username():
-    print(time.time(), START_TIME + DURATION)
     if session.get('username') in scores and time.time() < START_TIME + DURATION:
         return "0"
     elif session.get('username') not in scores:

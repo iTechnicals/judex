@@ -23,7 +23,8 @@
             <div class="horizontal-layout">
                 <div class="problem-column">
                     <div class="text">
-                        {{ statement }}
+                        <h2 class="no-margin">{{ title }}</h2>
+                        {{ statement|safe }}
                     </div>
                 </div>
                 <div class="submission-column">
@@ -52,11 +53,12 @@
             function checkValidity() {
                 $.getJSON({
                     url: "/get_valid_username",
-                    success: function(data, textStatus, xhr){
+                    success: function(data){
                         console.log(data);
                         switch (data) {
                             case 1:
-                                window.location.replace("{{ url_for('login', extra_content="Oops, looks like you got kicked! You can always join back in.") }}");
+                                window.location.replace("{{ url_for('login', extra_content="Oops, looks like you got kicked (or maybe the server went down?). You can always join back in.") }}");
+                                break;
                             case 2:
                                 window.location.replace("{{ url_for('leaderboard', extra_content="That&#39;s a wrap! Here are the final scores.") }}");
                         }
