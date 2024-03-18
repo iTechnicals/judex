@@ -92,18 +92,22 @@ def problems():
                 user_input = request.form['user_input']
 
                 for i, j in enumerate(PROBLEM_INPUTS[problem_number]):
-                    process = subprocess.Popen(["python", "-c", user_input], stdin=subprocess.PIPE,
-                                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    # process = subprocess.Popen(["python", "-c", user_input], stdin=subprocess.PIPE,
+                    #                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    #
+                    program_input = "\n".join(j)
+                    #
+                    # process.stdin.close()
 
-                    for k in j:
-                        process.stdin.write(k + "\n")
+                    try:
+                        output = subprocess.check_output(["python", "-c", user_input],
+                                                         input=program_input,
+                                                         timeout=1,
+                                                         universal_newlines=True,
+                                                         stderr=subprocess.STDOUT)
 
-                    process.stdin.close()
-
-                    output, error = process.communicate(timeout=1)
-
-                    if error:
-                        output = error
+                    except subprocess.CalledProcessError as e:
+                        output = e.output
                         break
 
                     output = output.strip().split("\n")
