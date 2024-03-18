@@ -1,18 +1,16 @@
 import subprocess
 import json
 import time
-import socket
 
 from secrets import token_urlsafe
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
-from markupsafe import escape
 
 app = Flask(__name__, static_url_path="/static")
-local = socket.gethostbyname(socket.gethostname())
-print(local)
 
 app.secret_key = token_urlsafe(16)
+authtoken = token_urlsafe(16)
+print(authtoken)
 
 PROBLEM_TITLES = []
 PROBLEM_TEXTS = []
@@ -23,32 +21,40 @@ PROBLEM_SCORES = []
 DURATION = 120
 START_TIME = float('inf')
 
-for problem in (Path(__file__).parent / "problems").glob('*'):
-    if not problem.is_dir():
-        continue
+root = Path(__file__).parent / "problems"
 
-    with open(problem / "problem.txt", "r") as f:
-        txt = f.readlines()
-        PROBLEM_TITLES.append(txt.pop(0)[:-1])
-        PROBLEM_TEXTS.append("")
+i = 0
+while True:
+    problem = root / str(i)
 
-        inner = False
-        i = 0
-        while i < len(txt := "".join(txt)):
-            try:
-                if txt[i:i+4] == "```\n" and not inner:
-                    PROBLEM_TEXTS[-1] += '<pre class="code"><code>'
-                    inner = True
-                    i += 4
-                elif txt[i:i+4] == "\n```" and inner:
-                    PROBLEM_TEXTS[-1] += '</code></pre>'
-                    inner = False
-                    i += 4
-                else:
-                    raise IndexError()
-            except IndexError:
-                PROBLEM_TEXTS[-1] += txt[i]
-                i += 1
+    try:
+        with open(problem / "problem.txt", "r") as f:
+            txt = f.readlines()
+            PROBLEM_TITLES.append(txt.pop(0)[:-1])
+            PROBLEM_TEXTS.append("")
+
+            inner = False
+            j = 0
+            while j < len(txt := "".join(txt)):
+                try:
+                    if txt[j:j + 4] == "```\n" and not inner:
+                        PROBLEM_TEXTS[-1] += '<pre class="code"><code>'
+                        inner = True
+                        j += 4
+                    elif txt[j:j + 4] == "\n```" and inner:
+                        PROBLEM_TEXTS[-1] += '</code></pre>'
+                        inner = False
+                        j += 4
+                    else:
+                        raise IndexError()
+                except IndexError:
+                    PROBLEM_TEXTS[-1] += txt[j]
+                    j += 1
+
+        i += 1
+
+    except FileNotFoundError:
+        break
 
 
     with open(problem / "tests.json", "r") as f:
@@ -63,8 +69,7 @@ scores = {}
 
 @app.route("/")
 def home():
-    print(request.remote_addr)
-    if request.remote_addr == "127.0.0.1" or request.remote_addr == local:
+    if session.get('admin'):
         return redirect(url_for('admin'))
     else:
         return redirect(url_for('problems', problem_id=0))
@@ -151,7 +156,6 @@ def get_scores():
 
 @app.route("/leaderboard", methods=['GET', 'POST'])
 def leaderboard():
-    admin = request.remote_addr == "127.0.0.1" or request.remote_addr == local
     match request.method:
         case "POST":
             if admin:
@@ -164,7 +168,7 @@ def leaderboard():
 
 @app.route("/admin", methods=['POST', 'GET'])
 def admin():
-    if request.remote_addr == "127.0.0.1" or request.remote_addr == local:
+    if session.get('admin'):
         match request.method:
             case "POST":
                 global START_TIME
@@ -180,7 +184,7 @@ def admin():
 
 @app.route("/auth")
 def auth():
-    if request.remote_addr == "127.0.0.1" or request.remote_addr == local:
+    if session.get('admin'):
         return "1"
     else:
         return "0"
@@ -225,3 +229,13 @@ def get_valid_username():
         return "1"
     else:
         return "2"
+
+
+@app.route(f"/{authtoken}")
+def authtoken():
+    session['admin'] = True
+    return redirect(url_for('home'))
+
+
+if __name__ == "__main__":
+    app.run(host='0.0.0.0')

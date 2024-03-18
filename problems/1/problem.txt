@@ -1,13 +1,1 @@
-Problem 0: Whack-A-Mole
-Given two integers $a$ and $b$ on separate lines, output $a+1$ and $b+1$ also on separate lines.
-
-<strong>Example Input</strong>
-```
-1
-2
-```
-<strong>Example Output</strong>
-```
-2
-3
-```
+Given two integers $a$ and $b$ on separate lines, output $2a$ and $2b$ also on separate lines.
