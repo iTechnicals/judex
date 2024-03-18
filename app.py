@@ -18,7 +18,7 @@ PROBLEM_INPUTS = []
 PROBLEM_OUTPUTS = []
 PROBLEM_SCORES = []
 
-DURATION = 120
+DURATION = 180
 START_TIME = float('inf')
 
 root = Path(__file__).parent / "problems"
@@ -92,12 +92,7 @@ def problems():
                 user_input = request.form['user_input']
 
                 for i, j in enumerate(PROBLEM_INPUTS[problem_number]):
-                    # process = subprocess.Popen(["python", "-c", user_input], stdin=subprocess.PIPE,
-                    #                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                    #
                     program_input = "\n".join(j)
-                    #
-                    # process.stdin.close()
 
                     try:
                         output = subprocess.check_output(["python", "-c", user_input],
@@ -106,8 +101,11 @@ def problems():
                                                          universal_newlines=True,
                                                          stderr=subprocess.STDOUT)
 
-                    except subprocess.CalledProcessError as e:
+                    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
                         output = e.output
+                        if type(output) == bytes:
+                            output = output.decode('utf-8')
+
                         break
 
                     output = output.strip().split("\n")

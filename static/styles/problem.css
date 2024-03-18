@@ -47,7 +47,10 @@ body {
 
 .code {
     display: block;
-    border: 1px solid gray;
+    max-width: calc(35vw - 10px);
+    max-height: 15vh;
+    overflow: auto;
+    border: 1px solid grey;
     border-radius: 3px;
     padding: 5px;
     background-color: #F0FFFF;
