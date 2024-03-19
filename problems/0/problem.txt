@@ -1,13 +1,18 @@
 Problem 0: Whack-A-Mole
-Given two integers $a$ and $b$ on separate lines, output $a+1$ and $b+1$ also on separate lines.
+Your program should take as input an integer $n$, followed by $n$ lines each containing a whole number. Output the sum of all these whole numbers, <em>not including n itself</em>. Your program should not output anything else.
 
 <strong>Example Input</strong>
 ```
+5
 1
 2
+3
+4
+-10
 ```
 <strong>Example Output</strong>
 ```
-2
-3
+0
 ```
+<strong>Explanation</strong>
+$1 + 2 + 3 + 4 + (-10) = 0$.

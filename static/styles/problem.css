@@ -48,11 +48,11 @@ body {
 .code {
     display: block;
     max-width: calc(35vw - 10px);
-    max-height: 15vh;
     overflow: auto;
     border: 1px solid grey;
     border-radius: 3px;
     padding: 5px;
+    margin: 10px 0 0 0;
     background-color: #F0FFFF;
     white-space: pre;
 }

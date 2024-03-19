@@ -22,8 +22,7 @@
         <div class="vertical-layout">
             <div class="horizontal-layout">
                 <div class="problem-column">
-                    <div class="text">
-                        <h2 class="no-margin">{{ title }}</h2>
+                    <div class="text"><h2 class="no-margin">{{ title }}</h2>
                         {{ statement|safe }}
                     </div>
                 </div>
@@ -35,7 +34,7 @@
                         <textarea id="editor-dummy" name="user_input" style="display: none;"></textarea>
                         <button id="submit" type="submit">Submit</button>
                     </form>
-                    <pre class="code"><code>{{ output }}</code></pre>
+                    <pre class="code" style="max-height: 15vh;"><code>{{ output }}</code></pre>
                 </div>
             </div>
             <button {% if not complete %} disabled {% endif %} class="next-button"
