@@ -14,4 +14,4 @@ COPY . .
 
 EXPOSE 5000
 
-CMD ["sudo", "-u", "daemon", "python", "app.py"]
+CMD ["python", "app.py"]

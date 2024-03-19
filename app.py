@@ -85,7 +85,10 @@ def problems():
     
     if problem_number > len(PROBLEM_INPUTS) - 1:
         return redirect(url_for('leaderboard', extra_content='Welp, looks like you finished all the problems! Time for the event admin to get back to work :)'))
-    
+
+    output = "Output shows up here!"
+    user_input = "# Code goes here!"
+
     match request.method:
         case 'POST':
             try:
@@ -95,9 +98,9 @@ def problems():
                     program_input = "\n".join(j)
 
                     try:
-                        output = subprocess.check_output(["python", "-c", user_input],
+                        output = subprocess.check_output(["sudo", "-u", "daemon", "python", "-c", user_input],
                                                          input=program_input,
-                                                         timeout=1,
+                                                         timeout=0.5,
                                                          universal_newlines=True,
                                                          stderr=subprocess.STDOUT)
 
@@ -138,10 +141,9 @@ def problems():
             except subprocess.CalledProcessError as e:
                 output = f"Error: {e.output}"
 
-        case 'GET':
-            output = "Output shows up here!"
-            complete = False
-            user_input = "# Code goes here!"
+    if len(output) > 2000:
+        output = output[:2000]
+        output += "...\nOutput was truncated to first 2000 characters."
 
     return render_template('problem.html',
                            title=PROBLEM_TITLES[problem_number],
