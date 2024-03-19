@@ -98,16 +98,26 @@ def problems():
                     program_input = "\n".join(j)
 
                     try:
-                        output = subprocess.check_output(["sudo", "-u", "daemon", "python", "-c", user_input],
-                                                         input=program_input,
-                                                         timeout=0.5,
-                                                         universal_newlines=True,
-                                                         stderr=subprocess.STDOUT)
+                        output = subprocess.run(["sudo", "-u", "daemon", "python", "-c", user_input],
+                                                input=program_input,
+                                                timeout=0.5,
+                                                text=True,
+                                                capture_output=True,
+                                                check=True)
 
-                    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
-                        output = e.output
-                        if type(output) == bytes:
-                            output = output.decode('utf-8')
+                        output = output.stdout
+
+                    except subprocess.CalledProcessError as e:
+                        output = e.stderr
+                        if e.stdout:
+                            output += f"\nBefore exiting, your program outputted the following:\n{e.stdout}"
+
+                        break
+
+                    except subprocess.TimeoutExpired as e:
+                        output = "Your program was terminated for taking too long to complete."
+                        if e.stdout:
+                            output += f"\nBefore being terminated, your program outputted the following:\n{e.stdout.decode('utf-8')}"
 
                         break
 
@@ -141,9 +151,12 @@ def problems():
             except subprocess.CalledProcessError as e:
                 output = f"Error: {e.output}"
 
+    if output is None:
+        output = "(no output given)"
+
     if len(output) > 2000:
         output = output[:2000]
-        output += "...\nOutput was truncated to first 2000 characters."
+        output += "...\nOutput was truncated for exceeding 2000 characters."
 
     return render_template('problem.html',
                            title=PROBLEM_TITLES[problem_number],
