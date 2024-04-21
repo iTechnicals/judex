@@ -1,1 +1,1 @@
-docker run -d -p 5000:5000 --ulimit nproc=100:100 judex
+docker run -d -p 5000:5000 judex

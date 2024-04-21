@@ -1,6 +1,7 @@
 import subprocess
 import json
 import time
+import resource
 
 from secrets import token_urlsafe
 from pathlib import Path
@@ -67,6 +68,12 @@ while True:
 
 scores = {}
 
+
+def limit(mem=64, proc=1):
+    resource.setrlimit(resource.RLIMIT_AS, (mem * 1024 * 1024, mem * 1024 * 1024))
+    resource.setrlimit(resource.RLIMIT_NPROC, (proc, proc))
+
+
 @app.route("/")
 def home():
     if session.get('admin'):
@@ -98,12 +105,13 @@ def problems():
                     program_input = "\n".join(j)
 
                     try:
-                        output = subprocess.run(["sudo", "-u", "daemon", "python", "-c", user_input],
+                        output = subprocess.run(["sudo", "-u", "nobody", "python", "-c", user_input],
                                                 input=program_input,
-                                                timeout=0.5,
                                                 text=True,
                                                 capture_output=True,
-                                                check=True)
+                                                timeout=1,
+                                                check=True,
+                                                preexec_fn=limit)
 
                         output = output.stdout
 
@@ -146,7 +154,7 @@ def problems():
                     session['first_unsolved_problem'] += 1
 
                     scores[session["username"]][0] += 1
-                    scores[session["username"]][1] += round(PROBLEM_SCORES[problem_number] * (1 - (time.time() - START_TIME) / DURATION))
+                    scores[session["username"]][1] += round(PROBLEM_SCORES[problem_number] * (1 - 2/3 * (time.time() - START_TIME) / DURATION))
 
             except subprocess.CalledProcessError as e:
                 output = f"Error: {e.output}"
