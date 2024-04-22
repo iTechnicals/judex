@@ -19,14 +19,14 @@ PROBLEM_INPUTS = []
 PROBLEM_OUTPUTS = []
 PROBLEM_SCORES = []
 
-DURATION = 180
+DURATION = 1800
 START_TIME = float('inf')
 
-root = Path(__file__).parent / "problems"
+root = Path(__file__).parent
 
 i = 0
 while True:
-    problem = root / str(i)
+    problem = root / "problems" / str(i)
 
     try:
         with open(problem / "problem.txt", "r") as f:
@@ -69,9 +69,10 @@ while True:
 scores = {}
 
 
-def limit(mem=64, proc=1):
-    resource.setrlimit(resource.RLIMIT_AS, (mem * 1024 * 1024, mem * 1024 * 1024))
-    resource.setrlimit(resource.RLIMIT_NPROC, (proc, proc))
+def limit(mem=64, proc=10):
+    resource.setrlimit(resource.RLIMIT_CPU, (2, resource.RLIM_INFINITY))
+    resource.setrlimit(resource.RLIMIT_AS, (mem * 1024 * 1024, resource.RLIM_INFINITY))
+    resource.setrlimit(resource.RLIMIT_NPROC, (proc, resource.RLIM_INFINITY))
 
 
 @app.route("/")
@@ -87,12 +88,12 @@ def problems():
     if 'username' not in session:
         return redirect(url_for('login'))
 
-    complete = False
     problem_number = session['first_unsolved_problem']
     
     if problem_number > len(PROBLEM_INPUTS) - 1:
         return redirect(url_for('leaderboard', extra_content='Welp, looks like you finished all the problems! Time for the event admin to get back to work :)'))
 
+    verdict = "NONE"
     output = "Output shows up here!"
     user_input = "# Code goes here!"
 
@@ -116,6 +117,7 @@ def problems():
                         output = output.stdout
 
                     except subprocess.CalledProcessError as e:
+                        verdict = f"RE/MLE{i}"
                         output = e.stderr
                         if e.stdout:
                             output += f"\nBefore exiting, your program outputted the following:\n{e.stdout}"
@@ -123,6 +125,7 @@ def problems():
                         break
 
                     except subprocess.TimeoutExpired as e:
+                        verdict = f"TLE{i}"
                         output = "Your program was terminated for taking too long to complete."
                         if e.stdout:
                             output += f"\nBefore being terminated, your program outputted the following:\n{e.stdout.decode('utf-8')}"
@@ -136,6 +139,7 @@ def problems():
                         continue
 
                     else:
+                        verdict = f"WA{i}"
                         new_output = f"Wrong answer on testcase {i + 1}: \nYour output:        Correct output:\n"
                         if len(output) < len(expt_output):
                             output += [""] * (len(expt_output) - len(output))
@@ -148,8 +152,8 @@ def problems():
                         break
 
                 else:
+                    verdict = "AC"
                     output = "Congratulations, your program passed all the testcases!"
-                    complete = True
 
                     session['first_unsolved_problem'] += 1
 
@@ -159,24 +163,58 @@ def problems():
             except subprocess.CalledProcessError as e:
                 output = f"Error: {e.output}"
 
-    if output is None:
-        output = "(no output given)"
+            if output is None:
+                output = "(no output given)"
 
-    if len(output) > 2000:
-        output = output[:2000]
-        output += "...\nOutput was truncated for exceeding 2000 characters."
+            if len(output) > 2000:
+                output = output[:2000]
+                output += "...\nOutput was truncated for exceeding 2000 characters."
+
+            with open("submissions.json", "r") as f:
+                submissions = json.load(f)
+                while (id := token_urlsafe(16)) in submissions:
+                    pass
+
+                submissions[id] = {
+                    "username": session['username'],
+                    "problem": problem_number,
+                    "verdict": verdict,
+                    "time": time.time() - START_TIME
+                }
+
+            with open("submissions.json", "w") as f:
+                json.dump(submissions, f, indent=4)
+
+            with open(f"submissions/{id}.py", "w+") as f:
+                f.write(user_input)
+
+    problem_number = session['first_unsolved_problem']
 
     return render_template('problem.html',
                            title=PROBLEM_TITLES[problem_number],
                            statement=PROBLEM_TEXTS[problem_number],
                            content=user_input,
-                           output=output,
-                           complete=complete)
+                           output=output)
 
 
 @app.route("/get_scores")
 def get_scores():
     return jsonify(scores)
+
+
+# this is probably hella slow ngl
+@app.route("/get_submissions")
+def get_submissions():
+    if session.get('admin'):
+        with open("submissions.json", "r") as f:
+            submissions = json.load(f)
+            for id, s in submissions.items():
+                with open(root / "submissions" / f"{id}.py", "r") as f:
+                    s["code"] = f.read()
+        return jsonify(submissions)
+    else:
+        return "", 403
+
 
 
 @app.route("/leaderboard", methods=['GET', 'POST'])
@@ -194,14 +232,17 @@ def leaderboard():
 @app.route("/admin", methods=['POST', 'GET'])
 def admin():
     if session.get('admin'):
+        global START_TIME
         match request.method:
             case "POST":
-                global START_TIME
                 START_TIME = time.time()
                 return redirect(url_for('leaderboard'))
 
             case "GET":
-                return render_template('admin.html')
+                if START_TIME < float('inf'):
+                    return render_template('submissions.html')
+                else:
+                    return render_template('start.html')
 
     else:
         return "", 403

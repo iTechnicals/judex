@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <title>{{ title }}</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='styles/problem.css') }}">
         <script type="text/x-mathjax-config">
             MathJax.Hub.Config({
@@ -37,14 +38,6 @@
                     <pre class="code" style="max-height: 15vh;"><code>{{ output }}</code></pre>
                 </div>
             </div>
-            <button {% if not complete %} disabled {% endif %} class="next-button"
-                    onclick="window.location='{{ url_for('problems') }}';">
-                <svg width="70px" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
-<!--                    <rect class="button-rect" width="800" height="600" rx="80" ry="80" fill="#8F8ECC"/>-->
-                    <polygon class="button-arrow" points="100, 200 100, 400 500, 400 500, 500 700, 300 500, 100 500, 200" fill=
-                            {% if complete %} "#51a3cc" {% else %} "#8eb7cc" {% endif %}/>
-                </svg>
-            </button>
         </div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
         <script src="{{ url_for('static', filename='scripts/problem.js') }}"></script>

@@ -23,26 +23,26 @@ function updateLeaderboard() {
             });
 
             let htmldata = "";
-            scorearr.forEach(function(item) {
+            scorearr.forEach(([username, problems, score]) => {
                 htmldata += `
                     <div class="grid-item">
-                `
+                `;
                 if (admin) {
                     htmldata += `
                         <form method="POST" style="display: inline;">
-                            <input type="submit" name="${item[0]}" value="x">
+                            <input type="submit" name="${username}" value="x">
                         </form>
-                    `
+                    `;
                 }
-                htmldata += `${item[0]}
+                htmldata += `${username}
                     </div>
                     <div class="grid-item right-grid-item">
-                        ${item[1]}
+                        ${problems}
                     </div>
                     <div class="grid-item right-grid-item">
-                        ${item[2]}
+                        ${score}
                     </div>
-                `
+                `;
             });
 
             $("#leaderboard").html(htmldata);
