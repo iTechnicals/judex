@@ -89,9 +89,6 @@ def problems():
         return redirect(url_for('login'))
 
     problem_number = session['first_unsolved_problem']
-    
-    if problem_number > len(PROBLEM_INPUTS) - 1:
-        return redirect(url_for('leaderboard', extra_content='Welp, looks like you finished all the problems! Time for the event admin to get back to work :)'))
 
     verdict = "NONE"
     output = "Output shows up here!"
@@ -188,7 +185,10 @@ def problems():
             with open(f"submissions/{id}.py", "w+") as f:
                 f.write(user_input)
 
-    problem_number = session['first_unsolved_problem']
+            problem_number = session['first_unsolved_problem']
+
+    if problem_number > len(PROBLEM_INPUTS) - 1:
+        return redirect(url_for('leaderboard', extra_content='Welp, looks like you finished all the problems! Time for the event admin to get back to work :)'))
 
     return render_template('problem.html',
                            title=PROBLEM_TITLES[problem_number],
