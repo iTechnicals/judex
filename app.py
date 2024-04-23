@@ -1,11 +1,11 @@
-import subprocess
 import json
 import time
-import resource
 
 from secrets import token_urlsafe
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+
+from grade import grade
 
 app = Flask(__name__, static_url_path="/static")
 
@@ -36,7 +36,7 @@ while True:
 
             inner = False
             j = 0
-            while j < len(txt := "".join(txt)):
+            while j < len(txt := "".join(txt).strip()):
                 try:
                     if txt[j:j + 4] == "```\n" and not inner:
                         PROBLEM_TEXTS[-1] += '<pre class="code"><code>'
@@ -69,12 +69,6 @@ while True:
 scores = {}
 
 
-def limit(mem=64, proc=10):
-    resource.setrlimit(resource.RLIMIT_CPU, (2, resource.RLIM_INFINITY))
-    resource.setrlimit(resource.RLIMIT_AS, (mem * 1024 * 1024, resource.RLIM_INFINITY))
-    resource.setrlimit(resource.RLIMIT_NPROC, (proc, resource.RLIM_INFINITY))
-
-
 @app.route("/")
 def home():
     if session.get('admin'):
@@ -96,76 +90,17 @@ def problems():
 
     match request.method:
         case 'POST':
-            try:
-                user_input = request.form['user_input']
+            user_input = request.form['user_input']
 
-                for i, j in enumerate(PROBLEM_INPUTS[problem_number]):
-                    program_input = "\n".join(j)
+            verdict, output = grade(user_input, PROBLEM_INPUTS[problem_number], PROBLEM_OUTPUTS[problem_number])
 
-                    try:
-                        output = subprocess.run(["sudo", "-u", "nobody", "python", "-c", user_input],
-                                                input=program_input,
-                                                text=True,
-                                                capture_output=True,
-                                                timeout=1,
-                                                check=True,
-                                                preexec_fn=limit)
+            if verdict == "AC":
+                user_input = "# Code goes here!"
 
-                        output = output.stdout
+                session['first_unsolved_problem'] += 1
 
-                    except subprocess.CalledProcessError as e:
-                        verdict = f"RE/MLE{i}"
-                        output = e.stderr
-                        if e.stdout:
-                            output += f"\nBefore exiting, your program outputted the following:\n{e.stdout}"
-
-                        break
-
-                    except subprocess.TimeoutExpired as e:
-                        verdict = f"TLE{i}"
-                        output = "Your program was terminated for taking too long to complete."
-                        if e.stdout:
-                            output += f"\nBefore being terminated, your program outputted the following:\n{e.stdout.decode('utf-8')}"
-
-                        break
-
-                    output = output.strip().split("\n")
-                    expt_output = PROBLEM_OUTPUTS[problem_number][i].copy()
-
-                    if output == expt_output:
-                        continue
-
-                    else:
-                        verdict = f"WA{i}"
-                        new_output = f"Wrong answer on testcase {i + 1}: \nYour output:        Correct output:\n"
-                        if len(output) < len(expt_output):
-                            output += [""] * (len(expt_output) - len(output))
-                        else:
-                            expt_output += [""] * (len(output) - len(expt_output))
-
-                        for actual, expt in zip(output, expt_output):
-                            new_output += actual + "".join((20 - len(actual)) * [" "]) + expt + "\n"
-                        output = new_output
-                        break
-
-                else:
-                    verdict = "AC"
-                    output = "Congratulations, your program passed all the testcases!"
-
-                    session['first_unsolved_problem'] += 1
-
-                    scores[session["username"]][0] += 1
-                    scores[session["username"]][1] += round(PROBLEM_SCORES[problem_number] * (1 - 2/3 * (time.time() - START_TIME) / DURATION))
-
-            except subprocess.CalledProcessError as e:
-                output = f"Error: {e.output}"
-
-            if output is None:
-                output = "(no output given)"
-
-            if len(output) > 2000:
-                output = output[:2000]
-                output += "...\nOutput was truncated for exceeding 2000 characters."
+                scores[session["username"]][0] += 1
+                scores[session["username"]][1] += round(PROBLEM_SCORES[problem_number] * (1 - 2/3 * (time.time() - START_TIME) / DURATION))
 
             with open("submissions.json", "r") as f:
                 submissions = json.load(f)
