@@ -26,9 +26,8 @@ function updateSubmissions() {
             let htmldata = "";
             dataarr.forEach(([id, value]) => {
                 let time = new Date(1000 * value["time"]).toISOString().slice(14, 19);
-                console.log(time);
                 let visibility = (opens[id] ?? false) ? "" : "hide";
-                let code = hljs.highlight(value['code'], {language: 'python'}).value;
+                let code = hljs.highlight(value["code"], {language: value["language"]}).value;
                 htmldata += `
                     <div class="grid">
                         <div class="grid-item">
@@ -37,6 +36,7 @@ function updateSubmissions() {
                         <div class="grid-item right-grid-item">${value["username"]}</div>
                         <div class="grid-item right-grid-item">${value["problem"]}</div>
                         <div class="grid-item right-grid-item">${time}</div>
+                        <div class="grid-item right-grid-item">${value["language"]}</div>
                         <div class="grid-item right-grid-item">${value["verdict"]}</div>
                     </div>
         

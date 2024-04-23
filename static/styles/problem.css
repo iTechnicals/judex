@@ -67,6 +67,13 @@ form {
     border-radius: 5px;
 }
 
-.submit {
+.submission-pane {
     margin-top: 10px;
+    width: 50%;
+    flex: 1;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
 }

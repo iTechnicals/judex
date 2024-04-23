@@ -3,12 +3,12 @@
     <head>
         <title>PyDash: Submission Viewer</title>
         <link rel="stylesheet" href="{{ url_for('static', filename='styles/submissions.css') }}">
-        <link rel="stylesheet" href="../static/styles/submissions.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/cpp.min.js"></script>
     </head>
     <body>
         <div class="vertical-layout">
@@ -19,6 +19,7 @@
                 <div class="grid-item right-grid-item">Contestant</div>
                 <div class="grid-item right-grid-item">Problem</div>
                 <div class="grid-item right-grid-item">Time</div>
+                <div class="grid-item right-grid-item">Language</div>
                 <div class="grid-item right-grid-item">Verdict</div>
             </div>
             <div id="submissions"></div>

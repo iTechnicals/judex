@@ -1,10 +1,39 @@
 import subprocess
 import resource
+
 from enum import Enum
+from dataclasses import dataclass
+from typing import Optional, Callable
 
 
-class Languages(Enum):
-    PYTHON = "python"
+
+@dataclass
+class Language:
+    id: str
+    name: str
+    extension: str
+    comment: str
+    compiled: bool
+    runcmd: Callable[[str], list[str]]
+    compcmd: Optional[Callable[[str], list[str]]] = None
+
+
+class Languages:
+    PYTHON = Language(
+        "python", "Python", ".py", "#", False,
+        lambda code: ["python", code]
+    )
+
+    CPP = Language(
+        "cpp", "C++", ".cpp", "//", True,
+        lambda code: [code + ".exe"],
+        lambda code: ["g++", code, "-o", code + ".exe", "-Wall", "-Wextra", "-O2", "-static", "-lm"]
+    )
+
+    table = {
+        "python": PYTHON,
+        "cpp": CPP
+    }
 
 
 def limit(time=1, mem=64, proc=10):
@@ -13,21 +42,21 @@ def limit(time=1, mem=64, proc=10):
     resource.setrlimit(resource.RLIMIT_NPROC, (proc, resource.RLIM_INFINITY))
 
 
-def run(code, stdin, language=Languages.PYTHON, limits=(1, 64, 10)):
-    match language:
-        case Languages.PYTHON:
-            output = subprocess.run(["sudo", "-u", "nobody", "python", "-c", code],
-                                    input=stdin,
-                                    text=True,
-                                    capture_output=True,
-                                    timeout=1,
-                                    check=True,
-                                    preexec_fn=lambda: limit(*limits))
+def compile(code, language=Languages.CPP):
+    subprocess.run(language.compcmd(str(code)))
 
-            return output
+
+def run(code, stdin, language=Languages.PYTHON, limits=(1, 64, 10)):
+    return subprocess.run(
+        ["sudo", "-u", "nobody"] + language.runcmd(str(code)),
+        input=stdin, text=True, capture_output=True, timeout=1, check=True, preexec_fn=lambda: limit(*limits)
+    )
 
 
 def grade(code, stdin, stdout, language=Languages.PYTHON, limits=(1, 64, 10)):
+    if language.compiled:
+        compile(code, language)
+
     for i, j in enumerate(stdin):
         stdin_format = "\n".join(j)
 

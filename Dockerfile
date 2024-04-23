@@ -1,5 +1,6 @@
 # To avoid forkbombs, run with --ulimit nproc=20:20 or similar.
 
+FROM gcc:13.2
 FROM python:3.11
 
 WORKDIR /app

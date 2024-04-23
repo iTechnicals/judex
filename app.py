@@ -5,7 +5,7 @@ from secrets import token_urlsafe
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 
-from grade import grade
+from grade import grade, Languages
 
 app = Flask(__name__, static_url_path="/static")
 
@@ -84,15 +84,25 @@ def problems():
 
     problem_number = session['first_unsolved_problem']
 
-    verdict = "NONE"
-    output = "Output shows up here!"
     user_input = "# Code goes here!"
+    language = Languages.PYTHON
+    output = "Output shows up here!"
 
     match request.method:
         case 'POST':
             user_input = request.form['user_input']
+            language = Languages.table[request.form['language']]
 
-            verdict, output = grade(user_input, PROBLEM_INPUTS[problem_number], PROBLEM_OUTPUTS[problem_number])
+            with open("submissions.json", "r") as f:
+                submissions = json.load(f)
+                while (id := token_urlsafe(16)) in submissions:
+                    pass
+
+            code_path = root / "submissions" / (id + language.extension)
+            with open(code_path, "w+") as f:
+                f.write(user_input)
+
+            verdict, output = grade(code_path, PROBLEM_INPUTS[problem_number], PROBLEM_OUTPUTS[problem_number], language=language)
 
             if verdict == "AC":
                 user_input = "# Code goes here!"
@@ -102,34 +112,30 @@ def problems():
                 scores[session["username"]][0] += 1
                 scores[session["username"]][1] += round(PROBLEM_SCORES[problem_number] * (1 - 2/3 * (time.time() - START_TIME) / DURATION))
 
-            with open("submissions.json", "r") as f:
-                submissions = json.load(f)
-                while (id := token_urlsafe(16)) in submissions:
-                    pass
-
-                submissions[id] = {
-                    "username": session['username'],
-                    "problem": problem_number,
-                    "verdict": verdict,
-                    "time": time.time() - START_TIME
-                }
+            submissions[id] = {
+                "username": session['username'],
+                "language": language.id,
+                "problem": problem_number,
+                "verdict": verdict,
+                "time": time.time() - START_TIME
+            }
 
             with open("submissions.json", "w") as f:
                 json.dump(submissions, f, indent=4)
-
-            with open(f"submissions/{id}.py", "w+") as f:
-                f.write(user_input)
 
             problem_number = session['first_unsolved_problem']
 
     if problem_number > len(PROBLEM_INPUTS) - 1:
         return redirect(url_for('leaderboard', extra_content='Welp, looks like you finished all the problems! Time for the event admin to get back to work :)'))
 
-    return render_template('problem.html',
-                           title=PROBLEM_TITLES[problem_number],
-                           statement=PROBLEM_TEXTS[problem_number],
-                           content=user_input,
-                           output=output)
+    return render_template(
+        'problem.html',
+        title=PROBLEM_TITLES[problem_number],
+        statement=PROBLEM_TEXTS[problem_number],
+        content=user_input,
+        language=language.id,
+        output=output
+    )
 
 
 @app.route("/get_scores")
@@ -144,7 +150,7 @@ def get_submissions():
         with open("submissions.json", "r") as f:
             submissions = json.load(f)
             for id, s in submissions.items():
-                with open(root / "submissions" / f"{id}.py", "r") as f:
+                with open(root / "submissions" / (id + Languages.table[s["language"]].extension), "r") as f:
                     s["code"] = f.read()
         return jsonify(submissions)
     else:

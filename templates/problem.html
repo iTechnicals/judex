@@ -34,7 +34,13 @@
                             <div id="editor">{{ content }}</div>
                         </div>
                         <textarea id="editor-dummy" name="user_input" style="display: none;"></textarea>
-                        <button id="submit" type="submit" class="submit">Submit</button>
+                        <div class="submission-pane">
+                            <select name="language" id="language-select">
+                                <option value="python">Python 3.11</option>
+                                <option value="cpp">C++23</option>
+                            </select>
+                            <button id="submit" type="submit" class="submit">Submit</button>
+                        </div>
                     </form>
                     <pre class="code" style="max-height: 15vh;"><code>{{ output }}</code></pre>
                 </div>
@@ -43,6 +49,8 @@
         <script>
             let homepageURL = "{{ url_for('login', extra_content="Oops, looks like you got kicked (or maybe the server went down?). You can always join back in.") }}";
             let leaderboardURL = "{{ url_for('leaderboard', extra_content="That&#39;s a wrap! Here are the final scores.") }}";
+            let selector = document.getElementById("language-select");
+            selector.value = "{{ language }}";
         </script>
         <script src="{{ url_for('static', filename='scripts/problem.js') }}"></script>
     </body>
