@@ -43,7 +43,10 @@ def limit(time=1, mem=64, proc=10):
 
 
 def compile(code, language=Languages.CPP):
-    subprocess.run(language.compcmd(str(code)))
+    return subprocess.run(
+        language.compcmd(str(code)),
+        capture_output=True, check=True
+    )
 
 
 def run(code, stdin, language=Languages.PYTHON, limits=(1, 64, 10)):
@@ -54,50 +57,59 @@ def run(code, stdin, language=Languages.PYTHON, limits=(1, 64, 10)):
 
 
 def grade(code, stdin, stdout, language=Languages.PYTHON, limits=(1, 64, 10)):
+    verdict = None
+
     if language.compiled:
-        compile(code, language)
-
-    for i, j in enumerate(stdin):
-        stdin_format = "\n".join(j)
-
         try:
-            output = run(code, stdin_format, language, limits).stdout.strip().split("\n")
-            expt_output = stdout[i]
+            compile(code, language)
+        except subprocess.CalledProcessError as e:
+            verdict = "CE"
+            # magic number yayyy
+            # should always cut off the path to the file, assuming its length is constant
+            output = e.stderr.decode('utf-8')[44:]
 
-            if output != expt_output:
-                verdict = f"WA{i}"
-                new_output = f"Wrong answer on testcase {i + 1}: \nYour output:        Correct output:\n"
+    if not verdict:
+        for i, j in enumerate(stdin):
+            stdin_format = "\n".join(j)
 
-                if len(output) < len(expt_output):
-                    output += [""] * (len(expt_output) - len(output))
-                else:
-                    expt_output += [""] * (len(output) - len(expt_output))
+            try:
+                output = run(code, stdin_format, language, limits).stdout.strip().split("\n")
+                expt_output = stdout[i]
 
-                for actual, expt in zip(output, expt_output):
-                    new_output += actual + "".join((20 - len(actual)) * [" "]) + expt + "\n"
+                if output != expt_output:
+                    verdict = f"WA{i}"
+                    new_output = f"Wrong answer on testcase {i + 1}: \nYour output:        Correct output:\n"
 
-                output = new_output
+                    if len(output) < len(expt_output):
+                        output += [""] * (len(expt_output) - len(output))
+                    else:
+                        expt_output += [""] * (len(output) - len(expt_output))
+
+                    for actual, expt in zip(output, expt_output):
+                        new_output += actual + "".join((20 - len(actual)) * [" "]) + expt + "\n"
+
+                    output = new_output
+                    break
+
+            except subprocess.CalledProcessError as e:
+                verdict = f"RE/MLE{i}"
+                output = e.stderr
+                if e.stdout:
+                    output += f"\nBefore exiting, your program outputted the following:\n{e.stdout}"
+
                 break
 
-        except subprocess.CalledProcessError as e:
-            verdict = f"RE/MLE{i}"
-            output = e.stderr
-            if e.stdout:
-                output += f"\nBefore exiting, your program outputted the following:\n{e.stdout}"
+            except subprocess.TimeoutExpired as e:
+                verdict = f"TLE{i}"
+                output = "Your program was terminated for taking too long to complete."
+                if e.stdout:
+                    output += f"\nBefore being terminated, your program outputted the following:\n{e.stdout.decode('utf-8')}"
 
-            break
+                break
 
-        except subprocess.TimeoutExpired as e:
-            verdict = f"TLE{i}"
-            output = "Your program was terminated for taking too long to complete."
-            if e.stdout:
-                output += f"\nBefore being terminated, your program outputted the following:\n{e.stdout.decode('utf-8')}"
-
-            break
-
-    else:
-        verdict = "AC"
-        output = "Congratulations, your program passed all the testcases!"
+        else:
+            verdict = "AC"
+            output = "Congratulations, your program passed all the testcases!"
 
     if output is None:
         output = "(no output given)"
