@@ -84,7 +84,7 @@ def problems():
 
     problem_number = session['first_unsolved_problem']
 
-    user_input = "# Code goes here!"
+    user_input = ""
     language = Languages.PYTHON
     output = "Output shows up here!"
 
@@ -105,8 +105,7 @@ def problems():
             verdict, output = grade(code_path, PROBLEM_INPUTS[problem_number], PROBLEM_OUTPUTS[problem_number], language=language)
 
             if verdict == "AC":
-                user_input = "# Code goes here!"
-
+                user_input = ""
                 session['first_unsolved_problem'] += 1
 
                 scores[session["username"]][0] += 1

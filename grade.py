@@ -64,9 +64,7 @@ def grade(code, stdin, stdout, language=Languages.PYTHON, limits=(1, 64, 10)):
             compile(code, language)
         except subprocess.CalledProcessError as e:
             verdict = "CE"
-            # magic number yayyy
-            # should always cut off the path to the file, assuming its length is constant
-            output = e.stderr.decode('utf-8')[44:]
+            output = e.stderr.decode('utf-8')
 
     if not verdict:
         for i, j in enumerate(stdin):

@@ -34,11 +34,12 @@ var editor = ace.edit("editor", {
     maxLines: 30
 });
 
+// NOTE: we don't save other language solutions if the code is actually submitted
 function updateLanguage(id, oldId) {
-    let mode = (id === "cpp" || id === "c") ? "c_cpp" : id;
+    let mode = (id === "c" || id === "cpp") ? "c_cpp" : id;
     editor.session.setMode("ace/mode/" + mode);
 
-    if (oldId) code[oldId] = editor.getValue();
+    if (editor.getValue() !== "") code[oldId] = editor.getValue();
     editor.setValue(code[id], -1);
 }
 
@@ -50,7 +51,7 @@ editor.getSession().on("change", function () {
 });
 
 selector.oldValue = selector.value;
-updateLanguage(selector.value);
+updateLanguage(selector.value, selector.oldValue);
 selector.addEventListener("change", (e) => {
     updateLanguage(selector.value, selector.oldValue);
     selector.oldValue = selector.value;
