@@ -100,6 +100,9 @@ def problems():
                 while (id := token_urlsafe(16)) in submissions:
                     pass
 
+            code_dir = root / "submissions"
+            if not code_dir.exists():
+                code_dir.mkdir()
             code_path = root / "submissions" / (id + language.extension)
             with open(code_path, "w+") as f:
                 f.write(user_input)
