@@ -81,6 +81,8 @@ def home():
 def problems():
     if 'username' not in session:
         return redirect(url_for('login'))
+    elif START_TIME > float('inf'):
+        return redirect(url_for('waiting_room'))
 
     problem_number = session['first_unsolved_problem']
 
