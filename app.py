@@ -103,11 +103,11 @@ def problems():
             code_dir = root / "submissions"
             if not code_dir.exists():
                 code_dir.mkdir()
-            code_path = root / "submissions" / (id + language.extension)
+            code_path = code_dir / (id + language.extension)
             with open(code_path, "w+") as f:
                 f.write(user_input)
 
-            verdict, output = grade(code_path, PROBLEM_INPUTS[problem_number], PROBLEM_OUTPUTS[problem_number], language=language)
+            verdict, output = grade(code_path, PROBLEM_INPUTS[problem_number], PROBLEM_OUTPUTS[problem_number], language=language, app=app)
 
             if verdict == "AC":
                 user_input = ""
