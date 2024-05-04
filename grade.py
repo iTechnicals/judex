@@ -1,10 +1,8 @@
 import subprocess
 import resource
 
-from enum import Enum
 from dataclasses import dataclass
 from typing import Optional, Callable
-
 
 
 @dataclass
@@ -58,7 +56,6 @@ def run(code, stdin, language=Languages.PYTHON, limits=(1, 64, 10)):
 
 def grade(code, stdin, stdout, language=Languages.PYTHON, limits=(1, 64, 10), app=None):
     verdict = None
-    print=app.logger.warn
     if language.compiled:
         try:
             compile(code, language)
@@ -72,9 +69,8 @@ def grade(code, stdin, stdout, language=Languages.PYTHON, limits=(1, 64, 10), ap
 
             try:
                 output = run(code, stdin_format, language, limits).stdout.strip().split("\n")
-                expt_output = stdout[i][:]
-                print(output)
-                print(expt_output)
+                expt_output = stdout[i].copy()
+
                 if output != expt_output:
                     verdict = f"WA{i}"
                     new_output = f"Wrong answer on testcase {i + 1}: \nYour output:        Correct output:\n"
