@@ -24,7 +24,7 @@
         <div class="vertical-layout">
             <div class="horizontal-layout">
                 <div class="problem-column">
-                    <div class="text"><h2 class="no-margin">{{ title }}</h2>
+                    <div class="text"><h2 class="no-margin">{{ title|safe }}</h2>
                         {{ statement|safe }}
                     </div>
                 </div>
