@@ -232,9 +232,9 @@ def get_begun():
     return str(int(START_TIME < float('inf')))
 
 
-@app.route("/get_duration")
-def get_duration():
-    return str(DURATION)
+@app.route("/get_time")
+def get_time():
+    return str(int(DURATION + START_TIME - time.time()))
 
 
 @app.route("/get_valid_username")

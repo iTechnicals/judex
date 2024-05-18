@@ -1,3 +1,5 @@
+let curr_time;
+
 let code = {
     "python": `# Code goes here!`,
     "cpp": `// Include standard library
@@ -27,7 +29,19 @@ function checkValidity() {
     });
 }
 
-var editor = ace.edit("editor", {
+function pad(n) {
+    return (n < 10) ? ("0" + n) : n;
+}
+
+function updateTimer() {
+    // var hours = Math.floor(curr_time / 3600); all events expected to be less than 1 hour
+    let minutes = Math.floor((curr_time % 3600) / 60);
+    let seconds = curr_time % 60;
+    document.getElementById('timer').textContent = pad(minutes) + ":" + pad(seconds);
+    curr_time--;
+}
+
+let editor = ace.edit("editor", {
     theme: "ace/theme/cobalt",
     mode: "ace/mode/python",
     minLines: 20,
@@ -43,7 +57,15 @@ function updateLanguage(id, oldId) {
     editor.setValue(code[id], -1);
 }
 
-var dummyeditor = document.getElementById("editor-dummy");
+let dummyeditor = document.getElementById("editor-dummy");
+
+$.getJSON({
+    url: "/get_time",
+    async: false,
+    success: function(data){
+        curr_time = data;
+    }
+});
 
 dummyeditor.value = editor.getValue();
 editor.getSession().on("change", function () {
@@ -57,6 +79,13 @@ selector.addEventListener("change", (e) => {
     selector.oldValue = selector.value;
 });
 
-checkValidity();
-setInterval(checkValidity, 10000);
+document.addEventListener('keydown', function (event) {
+    if (event.ctrlKey && event.key === 'Enter') {
+        document.getElementById('submit').click();
+    }
+});
 
+checkValidity();
+updateTimer();
+setInterval(checkValidity, 10000);
+setInterval(updateTimer, 1000);
