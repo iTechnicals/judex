@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>{{ title }}</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles/problem.css') }}">
-        <script type="text/x-mathjax-config">
+
+<head>
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/problem.css') }}">
+    <script type="text/x-mathjax-config">
             MathJax.Hub.Config({
                 TeX: {
                     equationNumbers: {
@@ -16,42 +17,81 @@
                 }
             });
         </script>
-        <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
-    </head>
-    <body>
-        <div class="vertical-layout">
-            <div class="horizontal-layout">
-                <div class="problem-column">
-                    <div class="text"><h2 class="no-margin">{{ title|safe }}</h2>
-                        {{ statement|safe }}
+    <script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
+</head>
+
+<body>
+    <div class="vertical-layout">
+        <div class="horizontal-layout">
+            <div class="problem-column">
+                <div class="text">
+                    <h2 class="no-margin">{{ title|safe }}</h2>
+                    {{ statement|safe }}
+                </div>
+                <div id="timer" class="timer"></div>
+            </div>
+            <div class="submission-column">
+                <form method="POST" class="form">
+                    <div class="editor-container">
+                        <div id="editor">{{ content }}</div>
                     </div>
-                </div>
-                <div class="submission-column">
-                    <form method="POST" class="form">
-                        <div class="editor-container">
-                            <div id="editor">{{ content }}</div>
-                        </div>
-                        <textarea id="editor-dummy" name="user_input" style="display: none;"></textarea>
-                        <div class="submission-pane">
-                            <select name="language" id="language-select">
-                                <option value="python">Python 3.11</option>
-                                <option value="cpp">C++23</option>
-                            </select>
-                            <button id="submit" type="submit" class="submit">Submit</button>
-                        </div>
-                    </form>
-                    <pre class="code" style="max-height: 15vh;"><code>{{ output }}</code></pre>
-                </div>
+                    <textarea id="editor-dummy" name="user_input" style="display: none;"></textarea>
+                    <div class="submission-pane">
+                        <select name="language" id="language-select">
+                            <option value="python">Python 3.11</option>
+                            <option value="cpp">C++23</option>
+                        </select>
+                        <button id="submit" type="submit" class="submit">Submit</button>
+                    </div>
+                </form>
+                <pre class="code" style="max-height: 15vh;"><code>{{ output }}</code></pre>
             </div>
         </div>
-        <script>
-            let homepageURL = "{{ url_for('login', extra_content="Oops, looks like you got kicked (or maybe the server went down?). You can always join back in.") }}";
-            let leaderboardURL = "{{ url_for('leaderboard', extra_content="That&#39;s a wrap! Here are the final scores.") }}";
-            let selector = document.getElementById("language-select");
-            selector.value = "{{ language }}";
-        </script>
-        <script src="{{ url_for('static', filename='scripts/problem.js') }}"></script>
-    </body>
+    </div>
+    <script>
+        document.addEventListener('keydown', function (event) {
+            if (event.ctrlKey && event.key === 'Enter') {
+                document.getElementById('submit').click();
+            }
+        });
+        var request = new XMLHttpRequest();
+        request.open('GET', '/get_duration', false);  // `false` makes the request synchronous
+        request.send(null);
+        if (request.status === 200) {
+            var data = JSON.parse(request.responseText);
+            localStorage.setItem('duration', data);
+        }
+
+        let homepageURL = "{{ url_for('login', extra_content="Oops, looks like you got kicked (or maybe the server went down ?). You can always join back in.") }}";
+        let leaderboardURL = "{{ url_for('leaderboard', extra_content="That&#39;s a wrap! Here are the final scores.") }}";
+        let selector = document.getElementById("language-select");
+        selector.value = "{{ language }}";
+
+        var curr_time = localStorage.getItem('curr_time');
+        if (curr_time === null) {
+            curr_time = localStorage.getItem('duration');
+        }
+        curr_time = parseInt(curr_time);
+        localStorage.setItem('curr_time', curr_time);
+
+        function pad(n) {
+            return (n < 10) ? ("0" + n) : n;
+        }
+
+        setInterval(function () {
+            var curr_time = localStorage.getItem('curr_time');
+            var hours = Math.floor(curr_time / 3600);
+            var minutes = Math.floor((curr_time % 3600) / 60);
+            var seconds = curr_time % 60;
+            document.getElementById('timer').textContent = "Remaining time: " + pad(hours) + ":" + pad(minutes) + ":" + pad(seconds);
+            curr_time--;
+            localStorage.setItem('curr_time', curr_time);
+        }, 1000);
+    </script>
+    <script src="{{ url_for('static', filename='scripts/problem.js') }}"></script>
+</body>
+
 </html>

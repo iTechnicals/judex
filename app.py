@@ -232,6 +232,11 @@ def get_begun():
     return str(int(START_TIME < float('inf')))
 
 
+@app.route("/get_duration")
+def get_duration():
+    return str(DURATION)
+
+
 @app.route("/get_valid_username")
 def get_valid_username():
     if session.get('username') in scores and time.time() < START_TIME + DURATION:
