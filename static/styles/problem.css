@@ -1,5 +1,10 @@
+html {
+  background-color: #00172a;
+}
+
 .text {
-    font-family: Segoe UI, ui-sans-serif;
+    color: #fff;
+    font-family: 'Comic Sans MS', 'Segoe UI', ui-sans-serif;
     white-space: pre-line;
 }
 
@@ -26,13 +31,13 @@ body {
 
 .problem-column {
     flex: 1;
-    width: 35vw;
+    width: 20vw;
     padding-right: 10px;
 }
 
 .submission-column {
     flex: 1;
-    width: 35vw;
+    width: 69vw;
     padding-left: 10px;
 
     display: flex;
@@ -69,7 +74,7 @@ form {
 
 .submission-pane {
     margin-top: 10px;
-    width: 50%;
+    width: 100%;
     flex: 1;
 
     display: flex;
@@ -82,4 +87,21 @@ form {
     font-size: 30px;
     margin-top: 50px;
     color: #A0A0A0;
+}
+
+button {
+  padding: 0.2rem 0.69rem;
+  text-align: center;
+  font-family: 'Comic Sans MS', 'Segoe UI Semibold', ui-sans-serif;
+  font-size: 150%;
+  color: white;
+  background-color: #9090f1;
+  border: none;
+  border-radius: 0.84rem;
+  transition: all 0.15s ease;
+}
+
+button:hover {
+  background-color: #ff0090;
+  border-radius: 0.42rem;
 }
