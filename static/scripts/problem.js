@@ -89,3 +89,13 @@ checkValidity();
 updateTimer();
 setInterval(checkValidity, 10000);
 setInterval(updateTimer, 1000);
+
+
+const submitButton = document.getElementById("submit");
+document.addEventListener("keydown", (event) => {
+    if (event.ctrlKey && event.key.toLowerCase() === "enter") {
+        event.preventDefault();
+        submitButton.click();
+    }
+});
+
