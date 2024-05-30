@@ -6,6 +6,7 @@ from pathlib import Path
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 
 from grade import grade, Languages
+from collections import defaultdict
 
 app = Flask(__name__, static_url_path="/static")
 
@@ -112,10 +113,10 @@ def problems():
             if verdict == "AC":
                 user_input = ""
                 session['first_unsolved_problem'] += 1
-
-                scores[session["username"]][0] += 1
-                scores[session["username"]][1] += round(PROBLEM_SCORES[problem_number] * (1 - 2/3 * (time.time() - START_TIME) / DURATION))
-
+                scores[session["username"]][problem_number] = max(
+                    scores[session["username"]][problem_number], 
+                    round(PROBLEM_SCORES[problem_number] * (1 - 2/3 * (time.time() - START_TIME) / DURATION)))
+                
             submissions[id] = {
                 "username": session['username'],
                 "language": language.id,
@@ -144,7 +145,8 @@ def problems():
 
 @app.route("/get_scores")
 def get_scores():
-    return jsonify(scores)
+    print({user: [len(v), sum(list(v.values()))] for user, v in scores.items()})
+    return jsonify({user: [len(v), sum(list(v.values()))] for user, v in scores.items()})
 
 
 # this is probably hella slow ngl
@@ -209,7 +211,7 @@ def login():
             if username not in scores:
                 session['username'] = username
                 session['first_unsolved_problem'] = 0
-                scores[username] = [0, 0]
+                scores[username] = defaultdict(int)
                 return redirect(url_for('waiting_room'))
             else:
                 return render_template('login.html',
