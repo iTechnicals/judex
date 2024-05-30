@@ -145,7 +145,6 @@ def problems():
 
 @app.route("/get_scores")
 def get_scores():
-    print({user: [len(v), sum(list(v.values()))] for user, v in scores.items()})
     return jsonify({user: [len(v), sum(list(v.values()))] for user, v in scores.items()})
 
 
